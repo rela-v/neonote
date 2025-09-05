@@ -1,0 +1,19 @@
+[package]
+name = "neonote"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-service = "2.0.3"
+actix-web = "4.11.0"
+futures-util = "0.3.31"
+serde = "1.0.219"
+serde_json = "1.0.143"
+sled = "0.34.7"
+
+[dependencies.uuid]
+version = "1.18.1"
+# Lets you generate random UUIDs
+features = [
+    "v4",
+]
