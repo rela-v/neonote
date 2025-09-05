@@ -24,14 +24,15 @@ COPY . .
 RUN cargo build --release
 
 # --- STAGE 2: Create the final, lightweight image ---
-# Use a minimal base image, such as a scratch image or alpine.
-# Scratch is the most minimal. You need to statically link to use it.
-# If you run into linking errors, use alpine.
 FROM debian:stable-slim
 
-# Copy the built binary from the `builder` stage.
-# The binary is located at /usr/src/app/target/release/neonote
+# Create a non-root user and a working directory
+RUN useradd --create-home --shell /bin/bash appuser
+WORKDIR /home/appuser/app
+USER appuser
+
+# Copy the built binary from the `builder` stage
 COPY --from=builder /usr/src/app/target/release/neonote /usr/local/bin/neonote
 
-# Set the command to run the application when the container starts.
+# Set the command to run the application when the container starts
 CMD ["/usr/local/bin/neonote"]
