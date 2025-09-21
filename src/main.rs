@@ -356,7 +356,7 @@ async fn get_filtered_items(
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let api_key = env::var("API_KEY").unwrap_or_else(|_| "secret".into());
-    let db = sled::open("/home/appuser/app/notes_db").expect("Failed to open sled database");
+    let db = sled::open("/usr/src/app/data/notes_db").expect("Failed to open sled database");
     let shared_db = web::Data::new(Arc::new(db));
 
     println!("Server running at http://localhost:8080");
@@ -381,3 +381,4 @@ async fn main() -> std::io::Result<()> {
     .run()
     .await
 }
+

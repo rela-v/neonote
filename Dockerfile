@@ -1,38 +1,42 @@
-# --- STAGE 1: Build the application ---
-# We use a build stage with a full Rust toolchain to compile the application.
+# STAGE 1: Builder
+# Use a Rust base image to build the application.
 FROM rust:latest as builder
 
-# Set the working directory inside the container.
+# Set the working directory for our app inside the container.
 WORKDIR /usr/src/app
 
-# Copy the Cargo.toml and Cargo.lock files first to leverage Docker's layer caching.
-# If these don't change, subsequent builds will be faster.
+# Copy the dependency files first to leverage Docker's layer caching.
 COPY Cargo.toml Cargo.lock ./
 
-# A dummy build to cache dependencies.
-RUN mkdir src/
-RUN echo "fn main() {}" > src/main.rs
+# Create a dummy src/main.rs to build dependencies.
+RUN mkdir src/ && echo "fn main() {}" > src/main.rs
+# Build dependencies. This layer is cached as long as Cargo.toml and Cargo.lock are unchanged.
 RUN cargo build --release
 
-# Remove the dummy src/main.rs file.
-RUN rm -rf src
-
-# Copy the rest of the source code into the container.
+# Copy the rest of the source code.
 COPY . .
 
 # Build the final release binary.
 RUN cargo build --release
 
-# --- STAGE 2: Create the final, lightweight image ---
-FROM debian:stable-slim
+# STAGE 2: Runner
+# Use a minimal base image for the final container.
+FROM debian:bookworm-slim
 
-# Create a non-root user and a working directory
-RUN useradd --create-home --shell /bin/bash appuser
-WORKDIR /home/appuser/app
-USER appuser
+# Set the working directory for the application as root.
+# We no longer create a separate user to make it "permission-proof".
+WORKDIR /usr/src/app
 
-# Copy the built binary from the `builder` stage
+# Create the directory for the database.
+RUN mkdir -p /usr/src/app/data/notes_db
+
+# Copy the binary from the builder stage.
 COPY --from=builder /usr/src/app/target/release/neonote /usr/local/bin/neonote
 
-# Set the command to run the application when the container starts
+# Expose the port the application listens on.
+EXPOSE 8080
+
+# The command to run the application.
+# It will run as root by default.
 CMD ["/usr/local/bin/neonote"]
+
